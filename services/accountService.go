@@ -45,10 +45,32 @@ func (as *AccountService) CreateNewAccount(a *models.Account) error {
 	return nil
 }
 
+// GetAccountById retrieves account with the passed id, then adjusts the CreatedOn and UpdatedOn
+// properties to UTC, the returns the modified models.Account.
+func (as *AccountService) GetAccountById(id int) (*models.AccountDto, error) {
+	a, err := as.appContext.Accounts.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	createdUtc := a.CreatedOn.UTC()
+	updatedUtc := a.UpdatedOn.UTC()
+
+	a.CreatedOn = &createdUtc
+	a.UpdatedOn = &updatedUtc
+
+	dto := a.ToDto()
+	dto.Password = nil
+
+	return dto, nil
+}
+
 // GetAllAccounts retrieves all accounts from the database through data.AppContext, formats the
 // CreatedOn and UpdatedOn dates to UTC, then returns the modified accounts slice.
-func (as *AccountService) GetAllAccounts() ([]*models.Account, error) {
+func (as *AccountService) GetAllAccounts() ([]*models.AccountDto, error) {
 	accounts, err := as.appContext.Accounts.GetAll()
+	accountDtos := []*models.AccountDto{}
+
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +81,25 @@ func (as *AccountService) GetAllAccounts() ([]*models.Account, error) {
 
 		a.CreatedOn = &createdUtc
 		a.UpdatedOn = &updatedUtc
+
+		dto := a.ToDto()
+
+		dto.Password = nil
+
+		accountDtos = append(accountDtos, dto)
 	}
 
-	return accounts, nil
+	return accountDtos, nil
 }
+
+// func (as *AccountService) UpdateAccount(id int, account *models.Account) error {
+// 	updatedOn := time.Now().UTC()
+// 	hashedPass, err := as.authService.HashPassword(account.Password.String)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	account.UpdatedOn = &updatedOn
+// 	account.Password = sql.NullString{String: hashedPass}
+
+// }

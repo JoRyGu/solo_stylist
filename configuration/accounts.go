@@ -16,4 +16,5 @@ func ConfigureAccountsRouter(app *fiber.App, ctx *data.AppContext) {
 
 	a.Get("/", accountsController.GetAllAccounts)
 	a.Post("/", accountsController.CreateNewAccount)
+	a.Get("/:id", accountsController.GetAccountById)
 }

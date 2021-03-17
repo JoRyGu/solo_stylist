@@ -28,3 +28,17 @@ func NewAccount(firstName, lastName, email, password string) *Account {
 		Password:  password,
 	}
 }
+
+func (a *Account) ToDto() *AccountDto {
+	id, firstName, lastName, email, password, createdOn, updatedOn := a.Id, a.FirstName, a.LastName, a.Email, a.Password, a.CreatedOn, a.UpdatedOn
+
+	return &AccountDto{
+		Id:        &id,
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Email:     &email,
+		Password:  &password,
+		CreatedOn: createdOn,
+		UpdatedOn: updatedOn,
+	}
+}

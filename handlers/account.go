@@ -4,8 +4,12 @@ Package handlers provides all handler functions used by the fiber app instance.
 package handlers
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/JoRyGu/solo_stylist/data/models"
 	"github.com/JoRyGu/solo_stylist/services"
+	"github.com/JoRyGu/solo_stylist/util"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,16 +24,26 @@ func NewAccountController(accountService *services.AccountService) *AccountContr
 	return &AccountController{accountService}
 }
 
+func (ac *AccountController) GetAccountById(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return util.SendError(c, 400, "Invalid ID")
+	}
+
+	account, err := ac.accountService.GetAccountById(id)
+	if err != nil {
+		return util.SendError(c, 404, fmt.Sprintf("Could not find account with ID %d", id))
+	}
+
+	return c.JSON(account)
+}
+
 // GetAllAccounts is a handler that retrieves all account records from the database and returns
 // a JSON representation of them to the API consumer.
 func (ac *AccountController) GetAllAccounts(c *fiber.Ctx) error {
 	accounts, err := ac.accountService.GetAllAccounts()
 	if err != nil {
-		return c.Status(500).JSON(&models.HttpError{
-			StatusCode:    500,
-			StatusMessage: "Internal Server Error",
-			Message:       "Error retrieving accounts from database.",
-		})
+		return util.SendError(c, 500, "Error retrieving accounts from database.")
 	}
 
 	return c.JSON(accounts)
@@ -41,11 +55,11 @@ func (ac *AccountController) CreateNewAccount(c *fiber.Ctx) error {
 	a := &models.Account{}
 
 	if err := c.BodyParser(a); err != nil {
-		return err
+		return util.SendError(c, 500, "Error parsing request body.")
 	}
 
 	if err := ac.accountService.CreateNewAccount(a); err != nil {
-		return err
+		return util.SendError(c, 500, "Error while creating new account.")
 	}
 
 	return c.JSON(a)

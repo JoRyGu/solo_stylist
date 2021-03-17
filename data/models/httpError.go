@@ -1,5 +1,7 @@
 package models
 
+import "github.com/gofiber/fiber/v2"
+
 // HttpError models the standard response body when an error is encountered in the program.
 // Any user errors will be present in the Fields property, otherwise Fields will be nil.
 type HttpError struct {
@@ -13,4 +15,9 @@ type HttpError struct {
 type HttpFieldError struct {
 	Name    string `json:"name"`
 	Message string `json:"message"`
+}
+
+func (he *HttpError) Send(c *fiber.Ctx) error {
+	c.Status(he.StatusCode)
+	return c.JSON(he)
 }

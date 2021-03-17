@@ -9,7 +9,6 @@ import (
 
 	"github.com/JoRyGu/solo_stylist/data/models"
 	"github.com/JoRyGu/solo_stylist/services"
-	"github.com/JoRyGu/solo_stylist/util"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -27,12 +26,22 @@ func NewAccountController(accountService *services.AccountService) *AccountContr
 func (ac *AccountController) GetAccountById(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return util.SendError(c, 400, "Invalid ID")
+		e := models.HttpError{
+			StatusCode:    400,
+			StatusMessage: "Bad Request",
+			Message:       "Invalid ID",
+		}
+		return e.Send(c)
 	}
 
 	account, err := ac.accountService.GetAccountById(id)
 	if err != nil {
-		return util.SendError(c, 404, fmt.Sprintf("Could not find account with ID %d", id))
+		e := models.HttpError{
+			StatusCode:    404,
+			StatusMessage: "Not Found",
+			Message:       fmt.Sprintf("Could not find account with ID %d", id),
+		}
+		return e.Send(c)
 	}
 
 	return c.JSON(account)
@@ -43,7 +52,12 @@ func (ac *AccountController) GetAccountById(c *fiber.Ctx) error {
 func (ac *AccountController) GetAllAccounts(c *fiber.Ctx) error {
 	accounts, err := ac.accountService.GetAllAccounts()
 	if err != nil {
-		return util.SendError(c, 500, "Error retrieving accounts from database.")
+		e := models.HttpError{
+			StatusCode:    500,
+			StatusMessage: "Internal Server Error",
+			Message:       "Error retrieving accounts from database.",
+		}
+		return e.Send(c)
 	}
 
 	return c.JSON(accounts)
@@ -55,11 +69,21 @@ func (ac *AccountController) CreateNewAccount(c *fiber.Ctx) error {
 	a := &models.Account{}
 
 	if err := c.BodyParser(a); err != nil {
-		return util.SendError(c, 500, "Error parsing request body.")
+		e := models.HttpError{
+			StatusCode:    500,
+			StatusMessage: "Internal Server Error",
+			Message:       "Error parsing request body.",
+		}
+		return e.Send(c)
 	}
 
 	if err := ac.accountService.CreateNewAccount(a); err != nil {
-		return util.SendError(c, 500, "Error while creating new account.")
+		e := models.HttpError{
+			StatusCode:    500,
+			StatusMessage: "Internal Server Error",
+			Message:       "Error while creating new account.",
+		}
+		return e.Send(c)
 	}
 
 	return c.JSON(a)
